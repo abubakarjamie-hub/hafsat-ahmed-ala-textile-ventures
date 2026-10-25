@@ -1,18 +1,12 @@
-import { NextResponse } from "next/server";
-import { getAllProducts, ensureProductsSeeded } from "@/lib/db-products";
+import { asc } from "drizzle-orm";
+import { db } from "@/db";
+import { products } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  try {
-    await ensureProductsSeeded();
-    const items = await getAllProducts();
-    return NextResponse.json({ products: items });
-  } catch (error) {
-    console.error("Failed to load products", error);
-    return NextResponse.json(
-      { error: "Failed to load products" },
-      { status: 500 }
-    );
-  }
+  const catalog = await db.select().from(products).orderBy(asc(products.displayOrder));
+  return Response.json(catalog, {
+    headers: { "Cache-Control": "no-store, max-age=0" },
+  });
 }
